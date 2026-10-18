@@ -1,0 +1,7 @@
+{
+  "name": "user-crud",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}

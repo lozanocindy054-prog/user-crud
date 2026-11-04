@@ -1,8 +1,17 @@
-import React from 'react';
+
+import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
+import { IonApp } from '@ionic/react';
 import App from './App';
 
-test('renders without crashing', () => {
-  const { baseElement } = render(<App />);
-  expect(baseElement).toBeDefined();
+describe('App', () => {
+  it('renders without crashing', () => {
+    const { baseElement } = render(
+      <IonApp>
+        <App />
+      </IonApp>
+    );
+
+    expect(baseElement).toBeTruthy();
+  });
 });

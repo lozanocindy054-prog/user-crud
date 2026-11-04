@@ -1,0 +1,87 @@
+
+name: User CRUD CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  # ==================================
+  # CONTINUOUS INTEGRATION
+  # ==================================
+  continuous-integration:
+    name: Continuous Integration
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run available tests
+        run: npm test --if-present
+
+      - name: Build Ionic application
+        run: npm run build
+
+  # ==================================
+  # CONTINUOUS DEPLOYMENT
+  # ==================================
+  continuous-deployment:
+    name: Continuous Deployment
+    needs: continuous-integration
+
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t user-crud:latest .
+
+      - name: Remove previous container
+        run: docker rm -f user-crud-app
+        continue-on-error: true
+
+      - name: Start updated container
+        run: docker run -d --name user-crud-app --restart unless-stopped -p 8080:8100 user-crud:latest
+
+      - name: Verify application
+        shell: powershell
+        run: |
+          $success = $false
+
+          for ($i = 1; $i -le 15; $i++) {
+            try {
+              Invoke-WebRequest http://localhost:8080/ -UseBasicParsing -TimeoutSec 2 | Out-Null
+              $success = $true
+              Write-Host "Application is running successfully!"
+              break
+            }
+            catch {
+              Start-Sleep -Seconds 2
+            }
+          }
+
+          if (-not $success) {
+            docker logs user-crud-app
+            exit 1
+          }

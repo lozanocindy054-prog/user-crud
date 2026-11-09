@@ -134,8 +134,7 @@ const Dashboard: React.FC = () => {
               <h1>Welcome back!</h1>
 
               <p>
-                Monitor your products, stock levels, and inventory
-                value in one place.
+                Monitor your inventory in real time and keep track of your products, stock levels, and overall inventory value.
               </p>
             </div>
 
